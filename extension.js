@@ -89,6 +89,10 @@ const Indicator = GObject.registerClass(
         this.label.destroy()
         this.label = null
       }
+      if (soupSession) {
+        soupSession.abort()
+        soupSession = null
+      }
       super.destroy()
     }
   },
@@ -109,9 +113,6 @@ class Extension {
     if (this._indicator) {
       this._indicator.destroy()
       this._indicator = null
-    }
-    if (soupSession) {
-      soupSession = null
     }
   }
 }
