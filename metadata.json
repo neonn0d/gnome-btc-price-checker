@@ -1,0 +1,6 @@
+{
+  "name": "Bitcoin Price Checker",
+  "description": "Displays the current price of Bitcoin, using the Binance API, and updates every minute.",
+  "uuid": "0xmentor.bio.link",
+  "shell-version": ["42"]
+}
