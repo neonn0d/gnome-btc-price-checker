@@ -2,6 +2,6 @@
   "name": "Bitcoin Price Checker",
   "description": "Displays the current price of Bitcoin, using the Binance API, and updates every minute.",
   "uuid": "bitcoin-price-checker@misfits.dev",
-  "shell-version": ["42"],
+  "shell-version": ["46", "47", "48", "49"],
   "url": "https://github.com/neonn0d/gnome-btc-price-checker"
 }
