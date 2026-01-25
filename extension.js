@@ -86,6 +86,7 @@ const Indicator = GObject.registerClass(
                 this.label = null;
             }
             if (soupSession) {
+                soupSession.abort();
                 soupSession = null;
             }
             super.destroy();
