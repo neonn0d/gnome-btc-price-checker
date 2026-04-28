@@ -5,9 +5,7 @@ import Soup from 'gi://Soup';
 import GLib from 'gi://GLib';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
-import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
-
-const GETTEXT_DOMAIN = 'bitcoin-price-checker';
+import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 
 let soupSession = null;
 
@@ -21,6 +19,9 @@ const Indicator = GObject.registerClass(
             });
             this.add_child(this.label);
 
+            this._inFlight = false;
+            this.label.set_text(_('Loading...'));
+
             this._updatePrice();
 
             this._refreshTimeout = GLib.timeout_add_seconds(
@@ -29,33 +30,43 @@ const Indicator = GObject.registerClass(
                 () => {
                     this._updatePrice();
                     return GLib.SOURCE_CONTINUE;
-                },
+                }
             );
         }
 
         _updatePrice() {
+            if (this._inFlight)
+                return;
+
+            this._inFlight = true;
             this.label.set_text(_('Fetching...'));
 
             this._fetchBitcoinPrice()
-                .then((price) => {
-                    const formattedPrice = price.toLocaleString('en-US', {
+                .then(price => {
+                    if (!Number.isFinite(price))
+                        throw new Error('Invalid price');
+
+                    const formatted = price.toLocaleString('en-US', {
                         style: 'currency',
                         currency: 'USD',
                         maximumFractionDigits: 0,
                     });
-                    this.label.set_text(`BTC: ${formattedPrice}`);
+
+                    this.label.set_text(`BTC: ${formatted}`);
                 })
-                .catch((error) => {
-                    console.error('Bitcoin Price Checker error:', error);
-                    this.label.set_text(_('Error fetching price'));
+                .catch(err => {
+                    log(`BTC error: ${err.message}`);
+                    this.label.set_text(_('Error '));
+                })
+                .finally(() => {
+                    this._inFlight = false;
                 });
         }
 
-        async _fetchBitcoinPrice() {
+        _fetchBitcoinPrice() {
             if (!soupSession) {
                 soupSession = new Soup.Session();
-                soupSession.user_agent =
-                    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36';
+                soupSession.user_agent = 'gnome-shell-extension';
             }
 
             const url = 'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT';
@@ -66,11 +77,23 @@ const Indicator = GObject.registerClass(
                 soupSession.send_and_read_async(message, GLib.PRIORITY_DEFAULT, null, (session, result) => {
                     try {
                         const bytes = session.send_and_read_finish(result);
-                        const data = JSON.parse(new TextDecoder().decode(bytes.get_data()));
-                        const price = parseFloat(data.price);
-                        resolve(price);
+
+                        const status = message.get_status();
+                        if (status !== Soup.Status.OK) {
+                            reject(new Error(`HTTP ${status}`));
+                            return;
+                        }
+
+                        const text = new TextDecoder().decode(bytes.get_data());
+                        const data = JSON.parse(text);
+
+                        if (!data.price)
+                            throw new Error('Missing price');
+
+                        resolve(parseFloat(data.price));
+
                     } catch (e) {
-                        reject(new Error('Failed to parse API response: ' + e.message));
+                        reject(e);
                     }
                 });
             });
@@ -81,29 +104,29 @@ const Indicator = GObject.registerClass(
                 GLib.source_remove(this._refreshTimeout);
                 this._refreshTimeout = null;
             }
+
             if (this.label) {
                 this.label.destroy();
                 this.label = null;
             }
+
             if (soupSession) {
                 soupSession.abort();
                 soupSession = null;
             }
+
             super.destroy();
         }
-    },
-);
+    });
 
 export default class BitcoinPriceCheckerExtension extends Extension {
     enable() {
         this._indicator = new Indicator();
-        Main.panel.addToStatusArea(this.uuid, this._indicator, 0, 'right');
+        Main.panel.addToStatusArea(this.uuid, this._indicator);
     }
 
     disable() {
-        if (this._indicator) {
-            this._indicator.destroy();
-            this._indicator = null;
-        }
+        this._indicator?.destroy();
+        this._indicator = null;
     }
 }
