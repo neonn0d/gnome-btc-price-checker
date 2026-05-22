@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.bitcoin-price-checker"
+          path="/org/gnome/shell/extensions/bitcoin-price-checker/">
+    <key name="source-preset" type="s">
+      <choices>
+        <choice value="binance-usdt"/>
+        <choice value="binance-eur"/>
+        <choice value="binance-jpy"/>
+        <choice value="coinbase-usd"/>
+        <choice value="coinbase-eur"/>
+        <choice value="coinbase-gbp"/>
+        <choice value="kraken-usd"/>
+        <choice value="kraken-eur"/>
+        <choice value="kraken-gbp"/>
+        <choice value="custom"/>
+      </choices>
+      <default>'binance-usdt'</default>
+      <summary>Price source</summary>
+    </key>
+    <key name="custom-url" type="s">
+      <default>''</default>
+      <summary>Custom API URL</summary>
+    </key>
+    <key name="custom-path" type="s">
+      <default>'price'</default>
+      <summary>Custom JSON path</summary>
+    </key>
+    <key name="custom-prefix" type="s">
+      <default>'$'</default>
+      <summary>Custom display prefix</summary>
+    </key>
+    <key name="refresh-seconds" type="i">
+      <default>60</default>
+      <range min="60" max="3600"/>
+      <summary>Refresh interval in seconds</summary>
+    </key>
+    <key name="panel-box" type="s">
+      <choices>
+        <choice value="left"/>
+        <choice value="center"/>
+        <choice value="right"/>
+      </choices>
+      <default>'right'</default>
+      <summary>Panel box</summary>
+    </key>
+    <key name="panel-index" type="i">
+      <default>0</default>
+      <range min="0" max="20"/>
+      <summary>Position within the panel box</summary>
+    </key>
+    <key name="use-custom-colors" type="b">
+      <default>false</default>
+      <summary>Use custom text and background colors</summary>
+    </key>
+    <key name="text-color" type="s">
+      <default>'#ffffff'</default>
+      <summary>Text color</summary>
+    </key>
+    <key name="background-color" type="s">
+      <default>'#000000'</default>
+      <summary>Background color</summary>
+    </key>
+    <key name="label-radius" type="i">
+      <default>0</default>
+      <range min="0" max="20"/>
+      <summary>Corner radius of the label background, in pixels</summary>
+    </key>
+  </schema>
+</schemalist>
